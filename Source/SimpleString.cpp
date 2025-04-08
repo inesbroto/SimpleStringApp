@@ -119,7 +119,7 @@ Path SimpleString::visualiseState (Graphics& g, double visualScaling)
         float newY = -u[1][l] * visualScaling + stringBoundaries;
         
         // if we get NAN values, make sure that we don't get an exception
-        if (isnan(newY))
+        if (std::isnan(newY))
             newY = 0;
         
         stringPath.lineTo (x, newY);
