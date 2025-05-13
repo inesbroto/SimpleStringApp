@@ -14,6 +14,84 @@
 //==============================================================================
 SimpleString::SimpleString (NamedValueSet& parameters, double k) : k (k)
 {
+//Cajón
+    L_x = 0.75;
+    L_y = 0.25;
+    E_cj = 3.8e9;
+    v = 0.3;
+    thick = 0.005;
+    D = E * pow(thick, 3) / (12 * (1 - pow(v, 2)));
+    rho_cj = 1150;
+    kappa = sqrt(D / (rho * thick));
+    sigma0_cj = 1;
+    sigma1_cj = 0.05;
+    k_cj = 1.0 / sr;
+    h_min = 2.1 * sqrt(k_cj * (sigma1_cj + sqrt(kappa * kappa + sigma1_cj * sigma1_cj)));
+
+
+    N_x = ceil(L_x / h_min);
+    N_y = ceil(L_y / h_min);
+    h_cj = std::min(L_x / N_x, L_y / N_y);
+    mu = kappa * k / (h_cj * h_cj);
+    S = 2 * sigma1 * k / (h_cj * h_cj);
+
+
+
+    for (int i = 0; i < 3; ++i)
+        uStates_cj[i] = std::vector<std::vector<double>>(N_x, std::vector<double>(N_y, 0.0));
+
+    uNext_cj = &uStates_cj[0];
+    u_cj     = &uStates_cj[1];
+    uPrev_cj = &uStates_cj[2];
+
+
+
+    // An (N_x, N_y) x 3 'matrix' containing the state of the system at all time-step
+    //uStates_cj = std::vector<std::vector<std::vector<float>>>(
+    //    3, std::vector<std::vector<float>>(
+    //        N_x + 1, std::vector<float>(N_y + 1, 0.0f)
+    //    )
+    //);
+    //u_cj = std::vector<std::vector<float>> (N_x + 1, std::vector<float>(N_y + 1, 0.0f));
+    //uPrev_cj = u_cj;
+    //uNext_cj = u_cj;
+
+    //excitation parameters
+    //int exc_x, exc_y, exc_dev;
+
+    // Mass-spring-collision setup
+    numMasses=6;
+    double M;
+
+    x = std::vector<float> (numMasses, 0.0);
+    xPrev = std::vector<float> (numMasses, 0.0);
+    x0 = std::vector<float> (numMasses, 0.01);
+    M = 0.05;
+    K_mass = std::vector<float> (numMasses);
+    K_col = std::vector<float> (numMasses, 1e8);
+    nu = std::vector<float> (numMasses, 1.7);
+    damping = std::vector<float> (numMasses, 0.01);
+
+
+    for (int i = 0; i < numMasses; ++i)
+        K_mass[i] = 800 + 100.0 * i / (numMasses - 1);
+
+    massPos = {
+        {int(N_x * 0.2), int(N_y * 0.4)}, {int(N_x * 0.2), int(N_y * 0.2)},
+        {int(N_x * 0.2), int(N_y * 0.3)}, {int(N_x * 0.2), int(N_y * 0.6)},
+        {int(N_x * 0.2), int(N_y * 0.8)}, {int(N_x * 0.2), int(N_y * 0.7)}
+    };
+
+        // Plate update scheme coefficients
+    A00 = 2 - 20 * mu * mu - 4 * S;
+    A01 = 8 * mu * mu + S;
+    A02 = -2 * mu * mu;
+    A03 = -mu * mu;
+    A04 = sigma0 * k - 1 + 4 * S;
+    A05 = -S;
+
+
+// Simple String
     // Initialise member variables using the parameter set
     L = *parameters.getVarPointer ("L");
     rho = *parameters.getVarPointer ("rho");
@@ -135,8 +213,171 @@ void SimpleString::resized()
 
 }
 
+
+
+
+
+
+void SimpleString::calculateScheme_cajon()
+{
+    // Short references to reduce pointer dereferencing verbosity
+    auto& u     = *u_cj;
+    auto& uPrev = *uPrev_cj;
+    auto& uNext = *uNext_cj;
+
+        // Main update loop
+    for (int l = 3; l < N_x - 2; ++l)
+    {
+        for (int m = 3; m < N_y - 2; ++m)
+        {
+            uNext[l][m] =
+                A00 * u[l][m] +
+                A01 * (u[l + 1][m] + u[l - 1][m] + u[l][m + 1] + u[l][m - 1]) +
+                A02 * (u[l + 1][m + 1] + u[l - 1][m + 1] + u[l + 1][m - 1] + u[l - 1][m - 1]) +
+                A03 * (u[l + 2][m] + u[l - 2][m] + u[l][m + 2] + u[l][m - 2]) +
+                A04 * uPrev[l][m] +
+                A05 * (uPrev[l + 1][m] + uPrev[l - 1][m] + uPrev[l][m + 1] + uPrev[l][m - 1]);
+        }
+    }
+
+    // Mass-spring-collision terms
+    for (int i = 0; i < numMasses; ++i)
+    {
+        int lc = massPos[i].first;
+        int mc = massPos[i].second;
+
+        double eta = x[i] - u[lc][mc];
+        double phi = (eta > 0.0) ? (1.0 / (nu[i] + 1.0)) * K_col[i] * std::pow(eta, nu[i] + 1.0) : 0.0;
+        double phiPrime = (eta > 0.0) ? K_col[i] * std::pow(eta, nu[i]) : 0.0;
+
+        double xNew = 2.0 * x[i] - xPrev[i]
+                    + (k * k / M) * (-K_mass[i] * (x[i] - x0[i]) - phiPrime - damping[i] * (x[i] - xPrev[i]) / k);
+
+        uNext[lc][mc] += (k * k / (rho_cj * thick * h_cj * h_cj)) * phiPrime;
+
+        xPrev[i] = x[i];
+        x[i] = xNew;
+    }
+}
+
+
+
+
+void SimpleString::updateStates_cajon()
+{
+    auto temp = uPrev_cj;
+    uPrev_cj = u_cj;
+    u_cj = uNext_cj;
+    uNext_cj = temp;
+    /*
+    std::vector<std::vector<float>>* tmp = uPrev_cj;
+    uPrev_cj = u_cj;
+    u_cj = uNext_cj;
+    uNext_cj = tmp;
+
+    OR
+
+    std::swap(uPrev_cj, u_cj);
+    std::swap(u_cj, uNext_cj);
+    */
+}
+
+
+
+/*
+void SimpleString::calculateScheme_cajon()
+{
+    for (int l = 3; l < N_x - 2; ++l)
+    {
+        for (int m = 3; m < N_y - 2; ++m)
+        {
+            uNext_cj[l][m] = A00 * u_cj[l][m]
+                           + A01 * (u_cj[l + 1][m] + u_cj[l - 1][m] + u_cj[l][m + 1] + u_cj[l][m - 1])
+                           + A02 * (u_cj[l + 1][m + 1] + u_cj[l - 1][m + 1] + u_cj[l + 1][m - 1] + u_cj[l - 1][m - 1])
+                           + A03 * (u_cj[l + 2][m] + u_cj[l - 2][m] + u_cj[l][m + 2] + u_cj[l][m - 2])
+                           + A04 * uPrev_cj[l][m]
+                           + A05 * (uPrev_cj[l + 1][m] + uPrev_cj[l - 1][m] + uPrev_cj[l][m + 1] + uPrev_cj[l][m - 1]);
+        }
+    }
+
+    // Handle collisions
+    for (int i = 0; i < numMasses; ++i)
+    {
+        int lc = massPos[i].first;
+        int mc = massPos[i].second;
+
+        double eta = x[i] - u_cj[lc][mc];
+        double phi = (eta > 0) ? (1.0 / (nu[i] + 1)) * K_col[i] * pow(eta, nu[i] + 1) : 0.0;
+        double phiPrime = (eta > 0) ? K_col[i] * pow(eta, nu[i]) : 0.0;
+
+        double xNew = 2 * x[i] - xPrev[i] + (k * k / M) *
+                      (-K_mass[i] * (x[i] - x0[i]) - phiPrime - damping[i] * (x[i] - xPrev[i]) / k);
+
+        uNext_cj[lc][mc] += (k * k / (rho * thick * h_cj * h_cj)) * phiPrime;
+
+        xPrev[i] = x[i];
+        x[i] = xNew;
+    }
+}
+
+
+void SimpleString::calculateScheme_cajon()
+{
+    for (int l = 3; l < N_x - 2; ++l)
+    {
+        for (int m = 3; m < N_y - 2; ++m)
+        {
+            uNext_cj[l][m] = (2 - 20 * mu * mu - 4 * S) * u_cj[l][m]
+                + (8 * mu * mu + S) * (u_cj[l + 1][m] + u_cj[l - 1][m] + u_cj[l][m + 1] + u_cj[l][m - 1])
+                - 2 * mu * mu * (u_cj[l + 1][m + 1] + u_cj[l - 1][m + 1] + u_cj[l + 1][m - 1] + u_cj[l - 1][m - 1])
+                - mu * mu * (u_cj[l + 2][m] + u_cj[l - 2][m] + u_cj[l][m + 2] + u_cj[l][m - 2])
+                + (sigma0 * k - 1 + 4 * S) * uPrev_cj[l][m]
+                - S * (uPrev_cj[l + 1][m] + uPrev_cj[l - 1][m] + uPrev_cj[l][m + 1] + uPrev_cj[l][m - 1]);
+        }
+    }
+
+    for (int i = 0; i < numMasses; ++i)
+    {
+        int lc = massPos[i].first;
+        int mc = massPos[i].second;
+
+        double eta = x[i] - u_cj[lc][mc];
+        double phi = (eta > 0) ? (1.0 / (nu[i] + 1)) * K_col[i] * pow(eta, nu[i] + 1) : 0.0;
+        double phiPrime = (eta > 0) ? K_col[i] * pow(eta, nu[i]) : 0.0;
+
+        double xNew = 2 * x[i] - xPrev[i] + k * k / M *
+                      (-K_mass[i] * (x[i] - x0[i]) - phiPrime - damping[i] * (x[i] - xPrev[i]) / k);
+
+        uNext_cj[lc][mc] += k * k / (rho * thick * h_cj * h_cj) * phiPrime;
+
+        xPrev[i] = x[i];
+        x[i] = xNew;
+    }
+}
+    
+
+void SimpleString::updateStates_cajon()
+{
+    auto temp = uStates_cj[2];
+    uStates_cj[2] = uStates_cj[1];
+    uStates_cj[1] = uStates_cj[0];
+    uStates_cj[0] = temp;
+
+    u_cj = uStates_cj[1];
+    uPrev_cj = uStates_cj[2];
+    uNext_cj = uStates_cj[0];
+}
+*/
+
+
+
+
+
+
+
 void SimpleString::calculateScheme()
 {
+
     for (int l = 2; l < N-1; ++l) // clamped boundaries
         u[0][l] = B0 * u[1][l] + B1 * (u[1][l + 1] + u[1][l - 1]) + B2 * (u[1][l + 2] + u[1][l - 2])
                 + C0 * u[2][l] + C1 * (u[2][l + 1] + u[2][l - 1]);

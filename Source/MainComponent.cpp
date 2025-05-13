@@ -78,8 +78,10 @@ void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& buffe
         
     for (int i = 0; i < bufferToFill.numSamples; ++i)
     {
-        mySimpleString->calculateScheme();
-        mySimpleString->updateStates();
+        //mySimpleString->calculateScheme();
+        //mySimpleString->updateStates();
+        mySimpleString->calculateScheme_cajon();
+        mySimpleString->updateStates_cajon();
         
         output = mySimpleString->getOutput (0.8); // get output at 0.8L of the string
         for (int channel = 0; channel < numChannels; ++channel)

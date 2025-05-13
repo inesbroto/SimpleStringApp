@@ -29,6 +29,8 @@ public:
 
     void calculateScheme();
     void updateStates();
+    void calculateScheme_cajon();
+    void updateStates_cajon();
     
     //return u at the current sample at a location given by the length ratio
 
@@ -44,9 +46,9 @@ public:
     
 private:
     
+//Simple string app
     // Model parameters
     double L, rho, A, T, E, I, cSq, kappaSq, sigma0, sigma1, lambdaSq, muSq, h, k;
-    
     // Number of intervals (N+1 is number of points including boundaries)
     int N;
     
@@ -55,15 +57,43 @@ private:
     
     // vector of pointers that point to state vectors
     std::vector<double*> u;
-    
     /* Scheme variables
         - Adiv for u^{n+1} (that all terms get divided by)
         - B for u^n
         - C for u^{n-1}
         - S for precalculated sigma terms
     */
-    double Adiv, B0, Bss, B1, B2, C0, C1, S0, S1;
+   double Adiv, B0, Bss, B1, B2, C0, C1, S0, S1;
     
+
+//cajón parameters
+    // Model parameters
+    const int sr = 44100;
+    double L_x, L_y;
+    double E_cj, v, thick, D, rho_cj, kappa, sigma0_cj, sigma1_cj, k_cj, h_min, h_cj, mu, S;
+    double N_x, N_y;
+
+    // An (N_x, N_y) x 3 'matrix' containing the state of the system at all time-step
+    std::vector<std::vector<std::vector<float>>> uStates_cj[3];
+
+    std::vector<std::vector<float>>* uPrev_cj;
+    std::vector<std::vector<float>>* u_cj;
+    std::vector<std::vector<float>>* uNext_cj;
+
+    //excitation parameters
+    int exc_x, exc_y, exc_dev;
+
+    // Mass-spring-collision setup
+    int numMasses;
+    std::vector<float> x, xPrev, x0, K_mass,K_col,nu,damping;
+    double M;
+    std::vector<std::pair<int, int>> massPos;
+
+        // Plate update scheme coefficients
+    double A00, A01, A02, A03, A04, A05;
+    
+    
+
     // flag to tell MainComponent whether to excite the scheme or not
     bool excitationFlag = false;
     
