@@ -148,7 +148,7 @@ int main() {
 
         out[n] = u[int(N_x * 0.7)][int(N_y * 0.6)];
     }
-    system("aplay tom.wav");
+    //system("aplay tom.wav");
 
     /*
     // Save output to file

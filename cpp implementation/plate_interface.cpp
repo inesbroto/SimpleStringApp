@@ -105,9 +105,11 @@ int main(int argc, char* argv[]) {
         {int(N_x * 0.8), int(N_y * 0.4)}, {int(N_x * 0.7), int(N_y * 0.4)}
     };
 
-    std::cout<<N_x<<" "<<N_y<< '\n';
-    std::cout<<exc_x<<" "<<exc_y<< '\n';
-    std::cout<<massPos[0].first<<" "<<massPos[0].second<<'\n';
+    std::cout<<"Cajon grid size (x,y) = " <<N_x<<" "<<N_y<< '\n';
+    std::cout<<"Normalized excitation coords (x,y) = " <<norm_x<<" "<<norm_y<< '\n';
+
+    std::cout<<"Grid excitation coords (x,y) = " <<exc_x<<" "<<exc_y<< '\n';
+    std::cout<<"Mass1 grid coords (x,y) = " <<massPos[0].first<<" "<<massPos[0].second<<'\n';
 
 
     for (int n = 0; n < numSamples; ++n) {
@@ -145,6 +147,16 @@ int main(int argc, char* argv[]) {
     std::string filename = "click_" + to_string(norm_x).substr(0,4) + "_" + to_string(norm_y).substr(0,4) + ".wav";
     save_wav(filename.c_str(), out, sr);
     system(("aplay " + filename).c_str());
+
+
+    
+    bool save_sound = false; // set to true if you want to keep the .wav generated sound
+    // Delete the file
+    if (not save_sound and std::remove(filename.c_str()) != 0) {
+        perror("Error deleting file");
+    } else {
+        std::cout << "File deleted successfully\n";
+    }
 
     return 0;
 }

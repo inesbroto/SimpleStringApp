@@ -55,7 +55,8 @@ while running:
             norm_x = x / WIDTH
             norm_y = y / HEIGHT
             print(f"Clicked at normalized coords: ({norm_x:.2f}, {norm_y:.2f})")
-            subprocess.run(["./plate_interface", str(norm_x), str(norm_y)], capture_output=False)
+
+            subprocess.run(["./plate_interface", str(norm_y), str(norm_x)], capture_output=False)
 
     pygame.display.flip()
 
