@@ -4,9 +4,9 @@
               displaySplashScreen="1" jucerFormatVersion="1">
   <MAINGROUP id="AgxLqn" name="SimpleStringApp">
     <GROUP id="{0186A2E4-C9B7-B38A-373D-CE2196659030}" name="Source">
-      <FILE id="SJZNyg" name="SimpleString.cpp" compile="1" resource="0"
-            file="Source/SimpleString.cpp"/>
-      <FILE id="aGD8Dj" name="SimpleString.h" compile="0" resource="0" file="Source/SimpleString.h"/>
+      <FILE id="SJZNyg" name="SimpleCajon.cpp" compile="1" resource="0"
+            file="Source/SimpleCajon.cpp"/>
+      <FILE id="aGD8Dj" name="SimpleCajon.h" compile="0" resource="0" file="Source/SimpleCajon.h"/>
       <FILE id="vPlLEL" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="ZgQUzY" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>

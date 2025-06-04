@@ -1,7 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "SimpleString.h"
+#include "SimpleCajon.h"
 //==============================================================================
 /*
     This component lives inside our window, and this is where you should put all
