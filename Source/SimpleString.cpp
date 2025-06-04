@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    SimpleString.cpp
+    SimpleCajon.cpp
     Created: 12 Feb 2021 1:10:03pm
     Author:  Silvin Willemsen
 
@@ -14,7 +14,7 @@
 
 
 //==============================================================================
-SimpleString::SimpleString (NamedValueSet& parameters, double k_cj) : k_cj (k_cj)
+SimpleCajon::SimpleCajon (NamedValueSet& parameters, double k_cj) : k_cj (k_cj)
 {
 //Cajón
 
@@ -172,12 +172,12 @@ SimpleString::SimpleString (NamedValueSet& parameters, double k_cj) : k_cj (k_cj
 */
 }
 
-SimpleString::~SimpleString()
+SimpleCajon::~SimpleCajon()
 {
     
 }
 
-void SimpleString::paint (juce::Graphics& g)
+void SimpleCajon::paint (juce::Graphics& g)
 {
     // clear the background
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
@@ -193,7 +193,7 @@ void SimpleString::paint (juce::Graphics& g)
 }
 
 
-Path SimpleString::visualiseState_cj (Graphics& g, double visualScaling)
+Path SimpleCajon::visualiseState_cj (Graphics& g, double visualScaling)
 {
     // String-boundaries are in the vertical middle of the component
     double stringBoundaries = getHeight() / 2.0;
@@ -225,13 +225,13 @@ Path SimpleString::visualiseState_cj (Graphics& g, double visualScaling)
     return stringPath;
 }
 
-void SimpleString::resized()
+void SimpleCajon::resized()
 {
 
 }
 
 
-void SimpleString::calculateScheme_cajon()
+void SimpleCajon::calculateScheme_cajon()
 
 {
         // Main update loop
@@ -272,7 +272,7 @@ void SimpleString::calculateScheme_cajon()
 
 
 
-void SimpleString::updateStates_cajon()
+void SimpleCajon::updateStates_cajon()
 {
     double* uTmp = u_pointer_cj[2];
     u_pointer_cj[2] = u_pointer_cj[1];
@@ -282,7 +282,7 @@ void SimpleString::updateStates_cajon()
 
 
 
-void SimpleString::excite2D()
+void SimpleCajon::excite2D()
 {
     //// 2D Raised Cosine Excitation ////
     DBG("Exciting!");
@@ -324,7 +324,7 @@ void SimpleString::excite2D()
     excitationFlag = false;
 }
 
-void SimpleString::mouseDown (const MouseEvent& e)
+void SimpleCajon::mouseDown (const MouseEvent& e)
 {
     // Get the excitation location as a ratio between the x-location of the mouse-click and the width of the app
     excitationLoc = e.x / static_cast<double> (getWidth());

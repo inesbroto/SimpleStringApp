@@ -46,10 +46,10 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
     parameters.set ("sigma0_cj", 6);
     parameters.set ("sigma1_cj", 0.05);
     
-    //// Initialise an instance of the SimpleString class ////
-    mySimpleString = std::make_unique<SimpleString> (parameters, 1.0 / sampleRate);
+    //// Initialise an instance of the SimpleCajon class ////
+    mySimpleCajon = std::make_unique<SimpleCajon> (parameters, 1.0 / sampleRate);
     
-    addAndMakeVisible (mySimpleString.get()); // add the string to the application
+    addAndMakeVisible (mySimpleCajon.get()); // add the string to the application
     
     // Call resized again as our components need a sample rate before they can get initialised.
     resized();
@@ -73,16 +73,16 @@ void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& buffe
     std::vector<float* const*> curChannel {&channelData1, &channelData2};
     
     // only do control stuff out of the buffer (at least work with flags so that control doesn't interfere with the scheme calculation)
-    if (mySimpleString->shouldExcite())
-        mySimpleString->excite2D();
+    if (mySimpleCajon->shouldExcite())
+        mySimpleCajon->excite2D();
 
         
     for (int i = 0; i < bufferToFill.numSamples; ++i)
     {
-        mySimpleString->calculateScheme_cajon();
-        mySimpleString->updateStates_cajon();
+        mySimpleCajon->calculateScheme_cajon();
+        mySimpleCajon->updateStates_cajon();
         
-        output = mySimpleString->getOutput_cj (0.5); // get output at (0.5*N_x,0.5*N_y) of the plate
+        output = mySimpleCajon->getOutput_cj (0.5); // get output at (0.5*N_x,0.5*N_y) of the plate
 
         for (int channel = 0; channel < numChannels; ++channel)
             curChannel[channel][0][i] = limit(output);
@@ -105,8 +105,8 @@ void MainComponent::paint (juce::Graphics& g)
 void MainComponent::resized()
 {
     // put the string in the application
-    if (mySimpleString != nullptr)
-        mySimpleString->setBounds (getLocalBounds());
+    if (mySimpleCajon != nullptr)
+        mySimpleCajon->setBounds (getLocalBounds());
 }
 
 // limiter

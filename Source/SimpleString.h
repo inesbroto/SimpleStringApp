@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    SimpleString.h
+    SimpleCajon.h
     Created: 12 Feb 2021 1:10:03pm
     Author:  Silvin Willemsen
 
@@ -15,11 +15,11 @@
 //==============================================================================
 /*
 */
-class SimpleString  : public juce::Component
+class SimpleCajon  : public juce::Component
 {
 public:
-    SimpleString (NamedValueSet& parameters, double k_cj);
-    ~SimpleString() override;
+    SimpleCajon (NamedValueSet& parameters, double k_cj);
+    ~SimpleCajon() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
@@ -124,5 +124,5 @@ private:
     
     bool clamped = true;
     
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleString)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleCajon)
 };
